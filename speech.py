@@ -69,6 +69,10 @@ class DataSetConfigurations(object):
             self.data_set = 'Original16'
             self.ng = 16
             self.original16()
+        elif data_set == 'NewData':
+            self.data_set = 'NewData'
+            self.ng = ng
+            self.new_data()
         else:
             self.ng = ng
             self.data_set = data_set
@@ -94,6 +98,32 @@ class DataSetConfigurations(object):
                             3: {0: 0, 1: 0, 4: 0.20294322 + (0.20 / (0.14 + 0.20))*(0.25518963 + 0.03967571), 7: 0.1398116 + (0.14 / (0.14 + 0.20))*(0.25518963 + 0.03967571)}}
         self.shift_timers_dict = {'Components': {1: [0], 13: [4, 6], 3: [0, 1]}, 'Targets': {'PGE': 23, 'SMUD': 0, 'SCE': 21, 'SDGE': 0}}
         self.timer_cat = 'Home'
+
+    def new_data(self):
+        """New Clustering. Also note new ng = 9 (replace with true value from implementation on new data."""
+
+        self.categories = ['Home', 'MUD', 'Work', 'Other Slow', 'Other Fast']
+        self.labels = ['Residential L2', 'MUD L2', 'Workplace L2', 'Public L2', 'Public DCFC']
+        self.colours = {'Residential L2': '#dfc27d', 'MUD L2': '#f6e8c3', 'Workplace L2': '#80cdc1', 'Public L2': '#01665e', 'Public DCFC': '#003c30'}
+        self.num_categories = 5
+        self.rates = [6.6, 6.6, 6.6, 6.6, 50]
+        self.gmm_names = {'Home': 'home', 'Work': 'work', 'Other Slow': 'other_slow', 'MUD': 'mud', 'Other Fast': 'other_fast'}
+        self.start_time_scaler = 1/60
+        self.zkey_weekday = ' - Fraction of weekdays with session'
+        self.zkey_weekend = ' - Fraction of weekenddays with session'
+        self.start_mod = 24*3600  # since start time is in seconds
+        self.timers_dict = {}
+        # Optional: record shifts for removing timers from fitted model
+        # self.timers_dict = {group number with timers in it:
+        # {gmm segment number with timers in it: 0,
+        # other gmm segment number to switch to: current weight + weight from timer segment}}
+        self.shift_timers_dict = {}
+        # Similarly: self.shift_timers_dict = {'Components': {group number with timers: [list of gmm segments with timers],
+        # another group number with timers: [list of gmm segments with timers],},
+        # 'Targets': {'PGE': 23, 'SMUD': 0, 'SCE': 21, 'SDGE': 0}}
+        self.timer_cat = 'Home'
+
+
 
     def set_up_dendrogram_cluster_mapping(self):
 

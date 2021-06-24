@@ -15,7 +15,7 @@ from sklearn.cluster import KMeans
 from sklearn.cluster import AgglomerativeClustering
 
 year = '2019'
-driver_subset = pd.read_csv(folder+'sessions'+year+'_driverdata.csv', index_col=0)
+driver_subset = pd.read_csv(data_folder+'sessions'+year+'_driverdata.csv', index_col=0)
 
 main_cols = ['Num Zip Codes', 'Battery Capacity', 'Num Workplace Sessions',
              'Num Single Family Residential Sessions', 'Num MUD Sessions',
@@ -46,7 +46,8 @@ def normalize_df(df, cols_keep):
         scaling_df['Col'].append(col)
         scaling_df['Shift'].append(df_here[col].min())
         scaling_df['Denom'].append(df_here[col].max()-df_here[col].min())
-        df_here[col] = (df_here[col]-df_here[col].min())/(df_here[col].max()-df_here[col].min())
+        if (df_here[col].max()-df_here[col].min()) > 0:
+            df_here[col] = (df_here[col]-df_here[col].min())/(df_here[col].max()-df_here[col].min())
     scaling_df = pd.DataFrame(scaling_df)
     return df_here, scaling_df
 
@@ -62,11 +63,14 @@ dend = shc.dendrogram(linkage, truncate_mode='lastp', p=16, show_leaf_counts=Tru
 plt.tight_layout()
 plt.savefig('dend_'+str(16)+'.png', bbox_inches='tight')
 plt.show()
+plt.close()
+
 fig, axes = plt.subplots(1, 1, figsize=(12,5))
 dend = shc.dendrogram(linkage, truncate_mode='lastp', p=32, show_leaf_counts=True, ax=axes)
 plt.tight_layout()
 plt.savefig('dend_'+str(32)+'.png', bbox_inches='tight')
 plt.show()
+plt.close()
 
 heights1 = []
 heights2 = []
@@ -86,4 +90,5 @@ plt.title('Elbow Plot')
 plt.tight_layout()
 plt.savefig('elbow_plot_of_driver_clustering.png', bbox_inches='tight')
 plt.show()
+
 

@@ -1,4 +1,4 @@
-num_clusters = 16  # *fill in selected number of clusters*
+num_clusters = 9  # *fill in selected number of clusters*
 data_folder = 'Folder/'  # *fill with correction location*
 
 import pandas as pd
@@ -8,7 +8,7 @@ import boto3
 from sklearn.cluster import AgglomerativeClustering
 
 year = '2019'
-driver_subset = pd.read_csv(folder+'sessions'+year+'_driverdata.csv', index_col=0)
+driver_subset = pd.read_csv(data_folder+'sessions'+year+'_driverdata.csv', index_col=0)
 
 # Process data:
 main_cols = ['Num Zip Codes', 'Battery Capacity', 'Num Workplace Sessions',
@@ -39,7 +39,8 @@ def normalize_df(df, cols_keep):
         scaling_df['Col'].append(col)
         scaling_df['Shift'].append(df_here[col].min())
         scaling_df['Denom'].append(df_here[col].max()-df_here[col].min())
-        df_here[col] = (df_here[col]-df_here[col].min())/(df_here[col].max()-df_here[col].min())
+        if df_here[col].max()-df_here[col].min() > 0:
+            df_here[col] = (df_here[col]-df_here[col].min())/(df_here[col].max()-df_here[col].min())
     scaling_df = pd.DataFrame(scaling_df)
 
     return df_here, scaling_df
