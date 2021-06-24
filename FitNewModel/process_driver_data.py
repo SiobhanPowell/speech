@@ -1,4 +1,4 @@
-data_folder = 'Folder/' # *fill with correct location*
+data_folder = 'Folder/'  # *fill with correct location*
 
 ''' Data should be preprocessed and located in the above folder. Description of data format:
 
