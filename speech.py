@@ -137,20 +137,20 @@ class SPEECh(object):
             self.pz['weekday'][i] = pd.read_csv(self.data.folder+'pz_weekday_g_'+str(i)+'.csv')
             # if self.weekend_exists:
             self.pz['weekend'][i] = pd.read_csv(self.data.folder+'pz_weekend_g_'+str(i)+'.csv')
-        if self.data.data_set == 'Original16':
-            self.fix_missing_data()
+        # if self.data.data_set == 'Original16':
+        #     self.fix_missing_data()
 
-    def fix_missing_data(self):
-        """Missing data for september, but the fraction denominators were calculated by default as if we had a full
-        year of sessions. Does not affect clustering, but need to fix here before application. """
-        num_weekdays = 5*52+1
-        num_weekends = 2*52
-        missing_weekdays = 5*4+1
-        missing_weekends = 2*4+1
-        for name in self.data.categories:
-            for i in range(self.data.ng):
-                self.pz['weekday'][i][name+self.data.zkey_weekday] = self.pz['weekday'][i][name+self.data.zkey_weekday] * num_weekdays / (num_weekdays - missing_weekdays)
-                self.pz['weekend'][i][name+self.data.zkey_weekend] = self.pz['weekend'][i][name+self.data.zkey_weekend] * num_weekends / (num_weekends - missing_weekends)
+    # def fix_missing_data(self):
+    #     """Missing data for september, but the fraction denominators were calculated by default as if we had a full
+    #     year of sessions. Does not affect clustering, but need to fix here before application. """
+    #     num_weekdays = 5*52+1
+    #     num_weekends = 2*52
+    #     missing_weekdays = 5*4+1
+    #     missing_weekends = 2*4+1
+    #     for name in self.data.categories:
+    #         for i in range(self.data.ng):
+    #             self.pz['weekday'][i][name+self.data.zkey_weekday] = self.pz['weekday'][i][name+self.data.zkey_weekday] * num_weekdays / (num_weekdays - missing_weekdays)
+    #             self.pz['weekend'][i][name+self.data.zkey_weekend] = self.pz['weekend'][i][name+self.data.zkey_weekend] * num_weekends / (num_weekends - missing_weekends)
             
 
 class SPEEChGeneralConfiguration(object):

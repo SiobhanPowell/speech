@@ -2,13 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import pomegranate
 
 from speech import DataSetConfigurations
 from speech import SPEECh
 from speech import SPEEChGeneralConfiguration
 
 
-def plot_together(data, ax, set_ymax=None, yticks=None, fonts=14, title=None, yax=True, xax=True, legendloc='upper right', nolegend=False):
+def plot_together(data, ax, set_ymax, yticks, fonts=14, yax=True, xax=True, legendloc='upper right', nolegend=False):
 
     colours = ['#dfc27d', '#f6e8c3', '#80cdc1',  '#01665e', '#003c30']
     labels = ['Residential L2', 'Multi-Unit Dwelling L2', 'Workplace L2', 'Public L2', 'Public DCFC']
@@ -23,29 +24,19 @@ def plot_together(data, ax, set_ymax=None, yticks=None, fonts=14, title=None, ya
     ax.plot(xplot, base, 'k')
 
     ax.set_xlim([0, 24])
-    if set_ymax is None:
-        ax.set_ylim([0, 1.1*np.max(base)])
-    else:
-        ax.set_ylim([0, set_ymax])
+    ax.set_ylim([0, set_ymax])
     ax.set_xticks([0, 3, 6, 9, 12, 15, 18, 21])
     if xax:
         ax.set_xlabel('Time of day [h]', fontsize=fonts+2)
         ax.set_xticklabels([0, 3, 6, 9, 12, 15, 18, 21], fontsize=fonts)
     else:
         ax.set_xticklabels([])
-    if yticks is None:
-        locs = ax.get_yticks()
-    else:
-        locs = yticks
+    ax.set_yticks(yticks)
     if yax:
-        ax.set_yticks(locs)
-        ax.set_yticklabels(locs.astype(int), fontsize=fonts)
+        ax.set_yticklabels(yticks.astype(int), fontsize=fonts)
         ax.set_ylabel('Load [MW]', fontsize=fonts+2)
     else:
-        ax.set_yticks([])
         ax.set_yticklabels([])
-    if title:
-        ax.set_title(title, fontsize=fonts)
     if not nolegend:
         ax.legend(loc=legendloc, ncol=2, fontsize=fonts-1)
     return ax
@@ -144,7 +135,7 @@ new_weights5_work[5] = 0.5 * (joint_gmm.weights_[5] / (joint_gmm.weights_[3]+joi
 data = DataSetConfigurations('Original16')
 
 # Set 1
-fig, axes = plt.subplots(1, 3, figsize=(24, 5.5), sharey=True)
+fig, axes = plt.subplots(1, 3, figsize=(24, 5.5))
 
 # Scenario 1
 model = SPEECh(data)
@@ -157,7 +148,10 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
+print('Ran 1')
 axes[0] = plot_together(config.total_load_segments, axes[0], fonts=20, yax=True, set_ymax=8200, yticks=np.arange(0, 8100, 1000), legendloc='upper left')
+axes[0].set_yticks(np.arange(0, 8100, 1000))
+axes[0].set_yticklabels(np.arange(0, 8100, 1000).astype(int), fontsize=20)
 
 # Scenario 2
 model = SPEECh(data)
@@ -170,6 +164,7 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', new_wei
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', new_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', new_weights5)
 config.run_all(weekday=weekday_option)
+print('Ran 2')
 axes[1] = plot_together(config.total_load_segments, axes[1], fonts=20, yax=False, set_ymax=8200, yticks=np.arange(0, 8100, 1000), nolegend=True)
 
 # Scenario 3
@@ -185,6 +180,7 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', new_wei
 config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Work', 'weekday', new_weights3_work)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Work', 'weekday', new_weights5_work)
 config.run_all(weekday=weekday_option)
+print('Ran 3')
 axes[2] = plot_together(config.total_load_segments, axes[2], fonts=20, yax=False, set_ymax=8200, yticks=np.arange(0, 8100, 1000), nolegend=True)
 
 plt.tight_layout()
@@ -193,7 +189,7 @@ plt.close()
 
 
 # Set 2
-fig, axes = plt.subplots(1, 3, figsize=(24, 5.5), sharey=True)
+fig, axes = plt.subplots(1, 3, figsize=(24, 5.5))
 
 # Scenario 4
 model = SPEECh(data)
@@ -206,7 +202,10 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-axes[0] = plot_together(config.total_load_segments, axes[0], fonts=20, yax=True, set_ymax=8200, yticks=np.arange(0, 8100, 1000), legendloc='upper left')
+print('Ran 4')
+axes[0] = plot_together(config.total_load_segments, axes[0], fonts=20, yax=True, set_ymax=8800, yticks=np.arange(0, 8100, 1000), legendloc='upper left')
+axes[0].set_yticks(np.arange(0, 8100, 1000))
+axes[0].set_yticklabels(np.arange(0, 8100, 1000).astype(int), fontsize=20)
 
 # Scenario 5
 model = SPEECh(data)
@@ -219,7 +218,8 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-axes[1] = plot_together(config.total_load_segments, axes[1], fonts=20, yax=False, set_ymax=8200, yticks=np.arange(0, 8100, 1000), nolegend=True)
+print('Ran 5')
+axes[1] = plot_together(config.total_load_segments, axes[1], fonts=20, yax=False, set_ymax=8800, yticks=np.arange(0, 8100, 1000), nolegend=True)
 
 # Scenario 6
 model = SPEECh(data)
@@ -232,7 +232,8 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-axes[2] = plot_together(config.total_load_segments, axes[2], fonts=20, yax=False, set_ymax=8200, yticks=np.arange(0, 8100, 1000), nolegend=True)
+print('Ran 6')
+axes[2] = plot_together(config.total_load_segments, axes[2], fonts=20, yax=False, set_ymax=8800, yticks=np.arange(0, 8100, 1000), nolegend=True)
 
 plt.tight_layout()
 plt.savefig('scenarios456.png', bbox_inches='tight')
