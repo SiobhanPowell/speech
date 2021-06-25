@@ -56,6 +56,7 @@ for i, j in data.cluster_reorder_dendtoac.items():
 counts_df = counts_df.sort_values(by='Dend Cluster Number').reset_index(drop=True)
 
 ## Scenario 123
+### Gives 0.67*0.9 weight to the combined set [3, 4, 5], etc., as labeled in the Dend cluster number.
 rescales = {(0.67*0.9): [3, 4, 5], (0.67*0.1): [9], 0.33: [0, 1, 2, 6, 7, 8, 10, 11, 12, 13, 14, 15]}
 counts_df['Scen1'] = counts_df['Original Weight'].copy()
 for key, val in rescales.items():

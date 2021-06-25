@@ -362,18 +362,6 @@ class SPEEChGroupConfiguration(object):
                 self.segment_session_numbers['weekend'][cat] = int(sum(self.speech_config.speech.pz['weekend'][self.g].loc[inds, cat+self.speech_config.speech.data.zkey_weekend]))
             else:
                 self.segment_session_numbers['weekend'][cat] = 0
-            # if self.total_drivers > 0:
-            #     if self.speech_config.speech.pz['weekday'][self.g].loc[:, cat+self.speech_config.speech.data.zkey_weekday].sum() / len(self.speech_config.speech.pz['weekday'][self.g]) > 0.001:# > (10):
-            #         self.segment_session_numbers['weekday'][cat] = int(sum(self.speech_config.speech.pz['weekday'][self.g].loc[inds, cat+self.speech_config.speech.data.zkey_weekday]))
-            #     else:
-            #         self.segment_session_numbers['weekday'][cat] = 0
-            #     if self.speech_config.speech.pz['weekend'][self.g].loc[:, cat+self.speech_config.speech.data.zkey_weekend].sum() / len(self.speech_config.speech.pz['weekend'][self.g]) > 0.001:# > (10):
-            #         self.segment_session_numbers['weekend'][cat] = int(sum(self.speech_config.speech.pz['weekend'][self.g].loc[inds, cat+self.speech_config.speech.data.zkey_weekend]))
-            #     else:
-            #         self.segment_session_numbers['weekend'][cat] = 0
-            # else:
-            #     self.segment_session_numbers['weekday'][cat] = 0
-            #     self.segment_session_numbers['weekend'][cat] = 0
 
     def load_gmms(self):
         """Loads the GMM model object for each of the segments."""
@@ -510,7 +498,7 @@ class Plotting(object):
         self.config.run_all(verbose=verbose, weekday=weekday)
         self.plot_single(self.config.total_load_segments, self.config.total_load_dict, save_str=save_str)
 
-    def groups(self, n=1e5, weekday='weekday'):
+    def groups(self, n=1e5, weekday='weekday', save_string=None):
 
         nrow = int(np.ceil(np.divide(self.speech.data.ng, 4)))
         fig, axes = plt.subplots(nrow, 4, sharex=True, sharey=True, figsize=(12, int(nrow*3)))
@@ -521,6 +509,7 @@ class Plotting(object):
             col = np.mod(i, 4)
             j = self.speech.data.cluster_reorder_dendtoac[i]
             config.group_configs[j].numbers(total_drivers=n)
+            config.group_configs[j].load_gmms()
             model = LoadProfile(config, config.group_configs[j], weekday=weekday)
             model.calculate_load()
             if np.max(np.sum(model.load_segments_array, axis=1)) > ymax:
@@ -536,6 +525,8 @@ class Plotting(object):
             for j in range(4):
                 axes[row, col].set_ylim([0, (1/1000)*ymax])
         plt.tight_layout()
+        if save_string is not None:
+            plt.savefig(save_string, bbox_inches='tight')
         plt.show()
 
     def sessions_components(self, g, cat, weekday, n=1e5):
@@ -566,7 +557,7 @@ class Plotting(object):
         ymax = 0
         for i in range(nc):
             inds = np.where(output_labels == i)[0]
-            if self.speech.data.tart_mod == 1:
+            if self.speech.data.start_mod == 1:
                 start_times = (self.speech.data.start_time_scaler * np.mod(24*3600*output_values[inds, 0], 24*3600)).astype(int)
             else:
                 start_times = (self.speech.data.start_time_scaler * np.mod(output_values[inds, 0], 24*3600)).astype(int)
