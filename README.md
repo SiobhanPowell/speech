@@ -10,9 +10,11 @@ S. Powell, G. V. Cezar, R. Rajagopal, "Scalable Probabilistic Estimates of Elect
 
 Read more about the project here: https://energy.stanford.edu/bitsandwatts/research/ev50-flagship-project/long-range-planning-ev50-what-future-demand-charging. 
 
-Thank you to the many collaborators who have made this project possible.
+Project Advisors: Ram Rajagopal, Ines Azevedo, Gustavo Cezar, Liang Min. 
 
-Project Advisors: Ram Rajagopal, Ines Azevedo, Gustavo Cezar, Liang Min. Collaborators and Team: Charles Kolstad, Lesley Ryan, Noel Crisostomo, Matt Alexander, Eric Wood, Wahila Wilkie, the GISMo, S3L, and EV50 groups, and many more.
+Collaborators and Team: Charles Kolstad, Lesley Ryan, Noel Crisostomo, Matt Alexander, Eric Wood, Wahila Wilkie, the GISMo, S3L, and EV50 groups, and many more.
+
+Thank you to the many collaborators who have made this project possible.
 
 ## Interactive Application
 You can interact with the model online here: [url coming soon].
