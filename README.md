@@ -26,7 +26,7 @@ The more complex scenarios used in `RunPaperScenarios.py` generate the scenarios
 
 ### Classes in SPEECh
 - `DataSetConfigurations` stores information about the data set being used, such as the location and the particular segment labels/naming conventions
-- `SPEECh` is the top level class storing the data, configuration, .... It is very general. It loads P(G) and P(z|G). 
+- `SPEECh` is the top level class storing the data and configurations. It is very general. It loads P(G) and P(z|G). 
 - `SPEEChGeneralConfiguration` manages model configuration details not specific to just one of the data sets, such as the time step. It includes methods to alter the distributions over groups (`change_pg()`) and behaviours (`change_ps_zg()`). It stores an instance of `SPEEChGroupConfiguration` for each driver group.
 - `SPEEChGroupConfiguration` is used for each individual driver group. It calculates the number of sessions that driver group will use in each segment, and stores the GMM session models for that driver group.
 - `LoadProfile` uses the above to calculate the total load profile for a particular group
