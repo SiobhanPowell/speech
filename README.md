@@ -1,7 +1,8 @@
 # SPEECh
 ## Scalable Probabilistic Estimates of Electric Vehicle Charging
 
-Primary Contact: Siobhan Powell
+Primary Contact: Siobhan Powell.
+
 Email: siobhan (dot) powell (at) stanford (dot) edu
 
 Publications: 
