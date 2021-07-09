@@ -17,7 +17,17 @@ Collaborators and Team: Charles Kolstad, Lesley Ryan, Noel Crisostomo, Matt Alex
 Thank you to the many collaborators who have made this project possible.
 
 ## Interactive Application
-You can interact with the model online here: [url coming soon].
+
+To run the interactive application:
+1. Download the data folder from: https://s3.us-west-1.amazonaws.com/speech.data/Original16.zip. Store it in a subfolder called `Data`.
+2. Navigate to this folder in your terminal.
+3. In a new virtual environment, run `python requirements.txt`.
+4. Run `flask run`.
+5. Go to `localhost:5000` in your browser.
+6. Play with the model and run your own scenarios!
+
+This web application was developed by Lesley Ryan with help from Siobhan Powell. For more information on how it works, please refer to the 'About' page in the application. 
+
 
 ## Code
 The main code is presented in `speech.py` and the file `SimpleExample.py` presents a simple example of how to use it. 
