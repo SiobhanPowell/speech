@@ -18,10 +18,11 @@ Thank you to the many collaborators who have made this project possible.
 
 ## Interactive Application
 
-To run the interactive application:
-1. Download the data folder from: https://s3.us-west-1.amazonaws.com/speech.data/Original16.zip. Store it in a subfolder called `Data`.
-2. Navigate to this folder in your terminal.
-3. In a new virtual environment, run `python requirements.txt`.
+To run the interactive application locally:
+0. Make sure you have a working version of Python 3 (this code was tested with Python 3.7.4).
+1. Navigate to this folder in your terminal.
+2. Download the data folder from: https://s3.us-west-1.amazonaws.com/speech.data/Original16.zip. Store it in a subfolder called `Data`.
+3. In a new virtual environment, run `pip install -r requirements.txt`. You can also run with the packages in your main system, but the `requirements.txt` file lists versions which we know will work with together in this code. 
 4. Run `flask run`.
 5. Go to `localhost:5000` in your browser.
 6. Play with the model and run your own scenarios!
@@ -110,9 +111,11 @@ Code included in the directory `FitNewModel` will let you fit your own version o
 
 This works with: 
 ```
-    pandas == '0.25.1'
-    matplotlib == '3.1.1'
-    numpy == '1.18.1'
-    sklearn == '0.22.2.post1'
+    pandas == 0.25.1
+    matplotlib == 3.1.1
+    numpy == 1.18.1
+    sklearn == 0.22.2.post1
+    flask == 1.1.1
+    json == 2.0.9
 ```    
 Python 3.7.4.
