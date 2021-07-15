@@ -1,0 +1,41 @@
+img {
+	max-width: 100%;
+}
+
+#intro {
+	margin-bottom: 60px;
+}
+#chart svg { 
+	border: 1px solid #dedede;
+	padding: 20px 0 0 20px;
+	width: 600px;
+	height: 420px;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.area { fill: #4ca3bd; }
+   
+.axis-label {
+  fill: #000;
+  font-size: 16px;
+}
+
+#clusters .row .col-sm > div img {
+    height: 220px;
+}
+
+#clusters .row div:nth-child(2) input {
+    width: 80px;
+}
+
+#clusters .row .col-sm div:nth-child(2) {
+    text-align: center;
+    padding: 5px 0 15px;
+}
+
+

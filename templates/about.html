@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+  <title>About</title>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <div class="collapse navbar-collapse" id="navbarColor03">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="/">Home
+              <span class="sr-only">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="">About</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <section id="title-text">
+    <div class="container">
+      <div class="row justify-content-center">
+        <h1>Scalable Probabilistic Estimates of EV Charging (SPEECh) </h1>
+      </div>
+    </div>
+  </section>
+  <section id="about-text">
+  	<div class="container">
+  	  <div class="row justify-content-left">
+        <section>
+        <h3>Project</h3>
+        <p>SPEECh is a probabilistic, data-driven model for large-scale scenarios of EV charging demand.
+          The project is part of EV50, a flagship program under the Stanford Precourt Institute for Energy’s
+          Bits & Watts Initiative. This web application was developed by Lesley Ryan and Siobhan Powell.</p>
+        <p><b>Publication:</b> <br>
+          Powell, S., Cezar, G. V., & Rajagopal, R. (2021).
+          "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior." Under review.</p>
+        </section>
+        <section>
+        <h3>Motivation</h3>
+        <p>EV targets / growth
+        </p>
+        <p>Long term planning to support electric vehicles (EVs) depends on detailed estimates of the future demand for charging.
+          These estimates need to be: scalable, to enable real-time interaction with the model and represent the millions of EVs in upcoming targets;
+          grounded in driver behaviour, which impacts every aspect of charging demand; and probabilistic,
+          to capture the uncertainty in future assumptions and in drivers’ charging decisions.</p>
+        </section>
+        <section>
+          <h3>About SPEECh</h3>
+        <p>Our proposed model, SPEECh, addresses that intersection: a holistic, probabilistic model for large-scale scenarios of EV charging,
+          grounded in data-driven modeling of real driver behavior.
+        The model has three main components: driver groups, segment choices, and sessions behaviors.</p>
+        <section>
+          <h5>Driver Groups</h5>
+        <p>The driver groups divide drivers into 16 distinct behavior patterns. Redistributing the drivers by changing the distribution over the groups allows the modeler to reshape the overall charging profile. This can be adjusted within the web-app. For example, to simulate the result of policies supporting installation of charging stations in multi-unit dwellings, the modeler could increase the weight of group 10.
+        </p>
+        </section>
+          <section>
+        <h5>Segments</h5>
+        <p>Each driver groups’ probability of choosing to charge in each segment on a given day is modeled. The segments are: workplace level 2 (L2), single family home residential L2, multi-unit dwelling L2, public L2, and public fast charging (DCFC).
+        </p>
+          </section>
+        <section>
+          <h5>Sessions Behaviors</h5>
+        <p>For each driver group and each charging segment, e.g. for group 1 workplace charging, we model the charging behaviors using a mixture model. Each component in the mixture is a unique charging behavior. Changing the weights of the components allows the modeler to adjust the distribution over behaviors and reshape the charging segment. This can be adjusted within the web-app.
+        </p>
+        </section>
+        <section>
+            <h5>About the Data</h5>
+            <p>For the results shown in the publication and on this web page, the model was trained on a large private data set of over 4 million charging sessions.
+                The sessions took place in 2019 in the San Francisco Bay Area, California, and represent the charging of over thirty thousand individual drivers.</p>
+        </section>
+        <h3>Code</h3>
+        <p>The model is open-source; we have published code to help other researchers run SPEECh with their own data ([link]).
+          This web-app runs off the same code. It runs the full model - each time the user changes an input, a new scenario is generated. This lets users interact with the model, customize scenarios, and understand the impact of their assumptions.
+        </p>
+        <p>The model can rapidly generate new scenarios: on a laptop computer, a scenario of 8 million vehicles takes approximately 1 minute to run. In the web-app, the run time may depend on the number of users interacting with the tool at the same time.
+        </p>
+        </section>
+        <section>
+        <h3>Contact</h3>
+        Please contact Siobhan Powell (siobhan.powell at stanford.edu), Gustavo Cezar (gcezar at stanford.edu), or Ram Rajagopal (ramr at stanford.edu) with questions. For more information about the EV50 program: <a href="https://energy.stanford.edu/bitsandwatts/research/ev-flagship-project">https://energy.stanford.edu/bitsandwatts/research/ev-flagship-project</a>.
+        <br>
+        For more information about the authors' groups: <a href="https://gismo.slac.stanford.edu">https://gismo.slac.stanford.edu </a> and <a href="https://s3l.stanford.edu">https://s3l.stanford.edu </a>.
+        </p>
+        </section>
+        <section>
+          <h3>Acknowledgements</h3>
+        <p>The authors would like to thank Liang Min of Bits & Watts, Matt Alexander and Noel Crisostomo of the California Energy Commission, Eric Wood of NREL, and Professors Ines Azevedo, Charles Kolstad, and Arun Majumdar of Stanford University.
+        </p>
+        </section>
+      </div>
+  	</div>
+  </section>
+</body>
+</html>

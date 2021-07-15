@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <!--<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" />-->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+<script src="https://getbootstrap.com/docs/4.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+  <script src="http://d3js.org/d3.v4.min.js"></script>
+<title>SPEECh: Scalable Probabilistic Estimates of Electric vehicle Charging</title>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <div class="collapse navbar-collapse" id="navbarColor03">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="#">Home
+            <span class="sr-only">(current)</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="about">About</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<section id="intro-text">
+  <div class="container">
+    <div class="row justify-content-center">
+      <h1>Scalable Probabilistic Estimates of EV Charging (SPEECh) </h1>
+    </div>
+  </div>
+</section>
+
+<section id="clusters" class="container-fluid container-section">
+  <form action="{{ url_for('main') }}" method="POST" id="form">
+    <div class="container">
+      <div class="row justify-content-left">
+        <p>Choose from the prepared scenarios or customize your own to generate an EV load profile.</p>
+        <section>
+        <h4>Required Inputs</h4>
+        <p><b>Number of Electric Vehicles. </b>
+        For reference, the state of California targets 5 million or 8 million by 2030. Today there are about 500,000 electric vehicles out of 30 million light-duty vehicles in the state.
+        </p>
+        <p><b>Weekday or Weekend.</b> Represent weekday (Mon-Fri) or weekend (Sat-Sun) charging behaviour in the load profile. </p>
+          <p><b>Timers.</b> Remove or leave in the timers in the residential charging segment. Timers delay sessions to start at 11pm or 12am on weekdays to align with the local lowest electricity price period for EV drivers. In the 2019 data, 27% of residential sessions use timers.</p>
+        </section>
+      </div>
+      <div class="row justify-content-center form-group">
+          Number of electric vehicles (EVs):
+          <input name="no_evs" type="number" value="{{ input.no_evs }}" step="1" min="1000" required>
+        &nbsp; &nbsp; Weekday or Weekend:
+          <select id="weekday" name="weekday">
+            <option value="weekday" {% if input.weekday_option == 'weekday' %} selected {% endif %}>Weekday</option>
+            <option value="weekend" {% if input.weekday_option == 'weekend' %} selected {% endif %}>Weekend</option>
+          </select>
+        &nbsp; &nbsp; Remove Residential Timers:
+          <select id="remove_timers" name="remove_timers">
+            <option value="False" {% if input.remove_timers == 'False' %} selected {% endif %}>False</option>
+            <option value="True" {% if input.remove_timers == 'True' %} selected {% endif %}>True</option>
+          </select>
+        &nbsp;
+          <input type="submit" name="submit">
+        
+      </div>
+      <div class="row justify-content-center form-group">
+        <div id="chart"></div>
+        <div>
+    <script>
+      var data = {{ output | safe }}
+
+//        self.colours = {'Residential L1': '#bf812d', 'Residential L2': '#dfc27d', 'MUD L2': '#f6e8c3', 'Workplace L2': '#80cdc1', 'Public L2': '#01665e', 'Public DCFC': '#003c30'}
+//       const color = ["lightgreen", "lightblue", "red", "orange", "yellow"];
+      const color = ['#bf812d', '#dfc27d', '#f6e8c3', '#80cdc1', '#01665e', '#003c30'];
+
+      // Create SVG and padding for the chart
+      const svg = d3
+        .select("#chart")
+        .append("svg")
+        .attr("height", 400)
+        .attr("width", 600);
+
+      const strokeWidth = 1.5;
+      const margin = { top: 0, bottom: 60, left: 60, right: 20 };
+      const chart = svg.append("g").attr("transform", `translate(${margin.left},0)`);
+
+      const width = +svg.attr("width") - margin.left - margin.right - strokeWidth * 2;
+      const height = +svg.attr("height") - margin.top - margin.bottom;
+      const grp = chart
+        .append("g")
+        .attr("transform", `translate(-${margin.left - strokeWidth},-${margin.top})`);
+
+      // Create stack
+      const stack = d3.stack().keys(["line1", "line2", "line3", "line4", "line5", "line6"]);
+      const stackedValues = stack(data);
+      const stackedData = [];
+      
+      // Copy the stack offsets back into the data.
+      stackedValues.forEach((layer, index) => {
+         const currentStack = [];
+         layer.forEach((d, i) => {
+            currentStack.push({
+               values: d,
+               x: data[i].x
+            });
+         });
+         stackedData.push(currentStack);
+       });
+
+      // Create scales
+      const yScale = d3
+        .scaleLinear()
+        .range([height, 0])
+        .domain([0, d3.max(stackedValues[stackedValues.length - 1], dp => dp[1])]);
+     
+ 
+      const xScale = d3
+         .scaleLinear()
+         .range([0, width])
+         .nice(d3.timeFormat("%H"))
+         .domain(d3.extent(data, dataPoint => dataPoint.x));
+
+      const area = d3
+         .area()
+         .x(dataPoint => xScale(dataPoint.x))
+         .y0(dataPoint => yScale(dataPoint.values[0]))
+         .y1(dataPoint => yScale(dataPoint.values[1]));
+
+      const series = grp
+         .selectAll(".series")
+         .data(stackedData)
+         .enter()
+         .append("g")
+         .attr("class", "series");
+
+      series
+         .append("path")
+         .attr("transform", `translate(${margin.left},0)`)
+         .style("fill", (d, i) => color[i])
+         .attr("stroke", "steelblue")
+         .attr("stroke-linejoin", "round")
+         .attr("stroke-linecap", "round")
+         .attr("stroke-width", strokeWidth)
+         .attr("d", d => area(d));
+
+      // Add the X Axis 
+      xchart = chart
+         .append("g")
+         .attr("transform", `translate(0,${height})`)
+         .call(d3.axisBottom(xScale).ticks("4"));
+
+      // Add the Y Axis 
+      ychart = chart
+         .append("g")
+         .attr("transform", `translate(0, 0)`)
+         .call(d3.axisLeft(yScale));
+         
+      // X Axis Label
+      xchart
+         .append("text")
+         .text("Hour of Day")
+         .attr("class", "axis-label")
+         .attr("x","220")
+         .attr("y","40")
+
+     // Y Axis Label 
+      ychart
+         .append("text")
+         .text("MW")
+         .attr("class", "axis-label")
+         .attr("x","-140")
+         .attr("y","-50")
+         .attr("transform", "rotate(-90)")
+      
+   </script>
+
+        </div>
+      </div>
+      <div class="row justify-content-left">
+        <section>
+          <h4>Scenarios</h4>
+          <p>Choose from the set of scenarios modeled in the publication. Choosing "Custom" will allow you to make your own adjustments below. </p>
+        </section>
+    </div>
+      <div class="row justify-content-center">
+        Cluster Scenarios: 
+        <select id="scenario" name="scenario">
+            <option value="BaseCase" {% if input.scenario == 'BaseCase' %} selected {% endif %}>Base Case</option>
+            <option value="Custom" {% if input.scenario == 'Custom' %} selected {% endif %}>Custom</option>
+            <option value="HighMUD" {% if input.scenario == 'HighMud' %} selected {% endif %}>High Multi-Unit Dwelling</option>
+            <option value="Workplace" {% if input.scenario == 'Workplace' %} selected {% endif %}>Workplace</option>
+            <option value="WorkplaceLargeBattery" {% if input.scenario == 'WorkplaceLargeBattery' %} selected {% endif %}>Workplace Large Battery</option>
+          </select>
+      </div>
+      <div class="row justify-content-center">
+        <section>
+          <h4>Customization</h4>
+          <p>For more information about how these changes and inputs are reflected in the model, please refer to the About page and publication. </p>
+          <p>For Part 1, ensure the "Custom" scenario is selected. After making adjustments below, click "Submit" above to run your scenario.
+            Note: the values are all reset by refreshing the page or after a run. </p>
+          <section>
+            <h5>Part 1: Adjusting the distribution over driver groups</h5>
+            <p>These driver groups represent distinct behaviors identified in the charging data. Key drivers of the clustering were segment (e.g. frequency of using workplace vs home charging) and battery/energy use.
+            </p>
+            <p>Example: Adjust the weights of clusters 4, 5, and 6 to sum to 0.5 to generate a scenario where 50% of drivers have access to residential L2 charging.
+            </p>
+            <p>Note: The distribution should sum to 1. You can change a subset of the values and we will adjust the others for you, keeping the same proportions among the ones you do not edit.
+            </p>
+          </section>
+          <section>
+            <h5>Part 2: Adjusting the distribution over sessions behaviors</h5>
+            <p>The charging behaviors within each driver group and segment are modeled by a mixture model. Click on one to open its model, then adjust the weights in the distribution to alter the mix of behaviors.
+            </p>
+            <p>Note: The distribution should sum to 1. You can change a subset of the values and we will adjust the others for you, keeping the same proportions among the ones you do not edit.
+            </p>
+            <p>Note 2: It is possible to change these distributions within a preset scenario, e.g. the BaseCase distribution over driver groups. </p>
+          </section>
+        </section>
+      </div>
+      <div class="row justify-content-center">
+        <img src="{{ url_for('static', filename='images/cluster-legend.png') }}" />
+      </div>
+
+<!--        Data set:  -->
+<!--        <input name="data_set" type="string" value="CP" required> -->
+      <div class="row">
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster1.png') }}" data-toggle="modal" data-target="#cluster1" />
+          </div>
+          <div>
+            Group 1:</br>
+            <input name="weight_g1" type="number" step="0.01" min="0.00" max="1.00"/></a>
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster2.png') }}" data-toggle="modal" data-target="#cluster2" />
+          </div>
+          <div>
+            Group 2:</br>
+            <input name="weight_g2" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster3.png') }}" data-toggle="modal" data-target="#cluster3" />
+          </div>
+          <div>
+            Group 3:</br>
+            <input name="weight_g3" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster4.png') }}" data-toggle="modal" data-target="#cluster4" />
+          </div>
+          <div>
+            Group 4:</br>
+            <input name="weight_g4" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster5.png') }}" data-toggle="modal" data-target="#cluster5" />
+          </div>
+          <div>
+            Group 5:</br>
+            <input name="weight_g5" type="number" step="0.01" min="0.00" max="1.00" />
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster6.png') }}" data-toggle="modal" data-target="#cluster6" />
+          </div>
+          <div>
+            Group 6:</br>
+            <input name="weight_g6" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster7.png') }}" data-toggle="modal" data-target="#cluster7" />
+          </div>
+          <div>
+            Group 7:</br>
+            <input name="weight_g7" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster8.png') }}" data-toggle="modal" data-target="#cluster8" />
+          </div>
+          <div>
+            Group 8:</br>
+            <input name="weight_g8" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster9.png') }}" data-toggle="modal" data-target="#cluster9" />
+          </div>
+          <div>
+            Group 9:</br>
+            <input name="weight_g9" type="number" step="0.01" min="0.00" max="1.00" />
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster10.png') }}" data-toggle="modal" data-target="#cluster10" />
+          </div>
+          <div>
+            Group 10:</br>
+            <input name="weight_g10" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster11.png') }}" data-toggle="modal" data-target="#cluster11" />
+          </div>
+          <div>
+            Group 11:</br>
+            <input name="weight_g11" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster12.png') }}" data-toggle="modal" data-target="#cluster12" />
+          </div>
+          <div>
+            Group 12:</br>
+            <input name="weight_g12" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+         </div>
+        </div>
+      <div class="row">
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster13.png') }}" data-toggle="modal" data-target="#cluster13" />
+          </div>
+          <div>
+            Group 13:</br>
+            <input name="weight_g13" type="number" step="0.01" min="0.00" max="1.00" />
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster14.png') }}" data-toggle="modal" data-target="#cluster14" />
+          </div>
+          <div>
+            Group 14:</br>
+            <input name="weight_g14" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster15.png') }}" data-toggle="modal" data-target="#cluster15" />
+          </div>
+          <div>
+            Group 15:</br>
+            <input name="weight_g15" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+        <div class="col-sm">
+          <div>
+            <img src="{{ url_for('static', filename='images/cluster16.png') }}" data-toggle="modal" data-target="#cluster16" />
+          </div>
+          <div>
+            Group 16:</br>
+            <input name="weight_g16" type="number" step="0.01" min="0.00" max="1.00">
+          </div>
+        </div>
+      </div> <!-- end grid of images -->
+    </div>
+  </form>
+</section>
+
+<section id="cluster-segments">
+        <div class="modal fade" id="cluster1" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 1</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>     
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster1_weekday_segment3.png" /></div>
+                  <div>
+                    <input class="cluster-input" id="cluster1_segment3_input1" name="cluster1_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster1_segment3_input2" name="cluster1_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster1_segment3_input3" name="cluster1_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster1_segment3_input4" name="cluster1_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster1_segment3_input5" name="cluster1_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster1_segment3_input6" name="cluster1_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster1_segment3_input7" name="cluster1_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit1" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster2" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 2</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>     
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster2_weekday_segment3.png" /></div>
+                  <div>
+                    <input class="cluster-input" id="cluster2_segment3_input1" name="cluster2_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster2_segment3_input2" name="cluster2_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster2_segment3_input3" name="cluster2_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster2_segment3_input4" name="cluster2_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster2_segment3_input5" name="cluster2_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster2_segment3_input6" name="cluster2_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster2_segment3_input7" name="cluster2_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit2 " class="clusterSubmit">Save Values</button>
+              </div>"
+            </div>
+          </div>
+        </div>
+
+       <div class="modal fade" id="cluster3" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 3</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>     
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster3_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster3_segment3_input1" name="cluster3_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster3_segment3_input2" name="cluster3_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster3_segment3_input3" name="cluster3_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster3_segment3_input4" name="cluster3_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster3_segment3_input5" name="cluster3_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster3_segment3_input6" name="cluster3_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster3_segment3_input7" name="cluster3_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit3" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+       <div class="modal fade" id="cluster4" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 4</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>     
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster4_weekday_segment1.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster4_segment1_input1" name="cluster4_segment1_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment1_input2" name="cluster4_segment1_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment1_input3" name="cluster4_segment1_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment1_input4" name="cluster4_segment1_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment1_input5" name="cluster4_segment1_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster4_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster4_segment3_input1" name="cluster4_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input2" name="cluster4_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input3" name="cluster4_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input4" name="cluster4_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input5" name="cluster4_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input6" name="cluster4_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input7" name="cluster4_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster4_segment3_input8" name="cluster4_segment3_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit4" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster5" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 5</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster5_weekday_segment1.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster5_segment1_input1" name="cluster5_segment1_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input2" name="cluster5_segment1_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input3" name="cluster5_segment1_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input4" name="cluster5_segment1_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input5" name="cluster5_segment1_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input6" name="cluster5_segment1_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input7" name="cluster5_segment1_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment1_input8" name="cluster5_segment1_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster5_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster5_segment4_input1" name="cluster5_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input2" name="cluster5_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input3" name="cluster5_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input4" name="cluster5_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input5" name="cluster5_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input6" name="cluster5_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input7" name="cluster5_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster5_segment4_input8" name="cluster5_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit5" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster6" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 6</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster6_weekday_segment1.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster6_segment1_input1" name="cluster6_segment1_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input2" name="cluster6_segment1_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input3" name="cluster6_segment1_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input4" name="cluster6_segment1_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input5" name="cluster6_segment1_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input6" name="cluster6_segment1_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input7" name="cluster6_segment1_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment1_input8" name="cluster6_segment1_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster6_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster6_segment3_input1" name="cluster6_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment3_input2" name="cluster6_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment3_input3" name="cluster6_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment3_input4" name="cluster6_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment3_input5" name="cluster6_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment3_input6" name="cluster6_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment3_input7" name="cluster6_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster6_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster6_segment4_input1" name="cluster6_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input2" name="cluster6_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input3" name="cluster6_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input4" name="cluster6_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input5" name="cluster6_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input6" name="cluster6_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input7" name="cluster6_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster6_segment4_input8" name="cluster6_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit6" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster7" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 7</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster7_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster7_segment3_input1" name="cluster7_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input2" name="cluster7_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input3" name="cluster7_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input4" name="cluster7_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input5" name="cluster7_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input6" name="cluster7_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input7" name="cluster7_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment3_input8" name="cluster7_segment3_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster7_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster7_segment4_input1" name="cluster7_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input2" name="cluster7_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input3" name="cluster7_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input4" name="cluster7_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input5" name="cluster7_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input6" name="cluster7_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input7" name="cluster7_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster7_segment4_input8" name="cluster7_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit7" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster8" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 8</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster8_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster8_segment3_input1" name="cluster8_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input2" name="cluster8_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input3" name="cluster8_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input4" name="cluster8_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input5" name="cluster8_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input6" name="cluster8_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input7" name="cluster8_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment3_input8" name="cluster8_segment3_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster8_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster8_segment4_input1" name="cluster8_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input2" name="cluster8_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input3" name="cluster8_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input4" name="cluster8_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input5" name="cluster8_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input6" name="cluster8_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input7" name="cluster8_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster8_segment4_input8" name="cluster8_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit8" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster9" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 9</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster9_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster9_segment3_input1" name="cluster9_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment3_input2" name="cluster9_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment3_input3" name="cluster9_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment3_input4" name="cluster9_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment3_input5" name="cluster9_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment3_input6" name="cluster9_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster9_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster9_segment4_input1" name="cluster9_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment4_input2" name="cluster9_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment4_input3" name="cluster9_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment4_input4" name="cluster9_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment4_input5" name="cluster9_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment4_input6" name="cluster9_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster9_segment4_input7" name="cluster9_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit9" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster10" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 10</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster10_weekday_segment2.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster10_segment2_input1" name="cluster10_segment2_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input2" name="cluster10_segment2_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input3" name="cluster10_segment2_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input4" name="cluster10_segment2_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input5" name="cluster10_segment2_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input6" name="cluster10_segment2_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input7" name="cluster10_segment2_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment2_input8" name="cluster10_segment2_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster10_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster10_segment3_input1" name="cluster10_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment3_input2" name="cluster10_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment3_input3" name="cluster10_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment3_input4" name="cluster10_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment3_input5" name="cluster10_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment3_input6" name="cluster10_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster10_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster10_segment4_input1" name="cluster10_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input2" name="cluster10_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input3" name="cluster10_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input4" name="cluster10_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input5" name="cluster10_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input6" name="cluster10_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input7" name="cluster10_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster10_segment4_input8" name="cluster10_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit10" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster11" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 11</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster11_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster11_segment4_input1" name="cluster11_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input2" name="cluster11_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input3" name="cluster11_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input4" name="cluster11_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input5" name="cluster11_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input6" name="cluster11_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input7" name="cluster11_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster11_segment4_input8" name="cluster11_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit11" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster12" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 12</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster12_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster12_segment4_input1" name="cluster12_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster12_segment4_input2" name="cluster12_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster12_segment4_input3" name="cluster12_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster12_segment4_input4" name="cluster12_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster12_segment4_input5" name="cluster12_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster12_segment4_input6" name="cluster12_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster12_segment4_input7" name="cluster12_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit12" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster13" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 13</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster13_weekday_segment1.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster13_segment1_input1" name="cluster13_segment1_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input2" name="cluster13_segment1_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input3" name="cluster13_segment1_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input4" name="cluster13_segment1_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input5" name="cluster13_segment1_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input6" name="cluster13_segment1_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input7" name="cluster13_segment1_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment1_input8" name="cluster13_segment1_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster13_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster13_segment4_input1" name="cluster13_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input2" name="cluster13_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input3" name="cluster13_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input4" name="cluster13_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input5" name="cluster13_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input6" name="cluster13_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input7" name="cluster13_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster13_segment4_input8" name="cluster13_segment4_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit13" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster14" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 14</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster14_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster14_segment3_input1" name="cluster14_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment3_input2" name="cluster14_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment3_input3" name="cluster14_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment3_input4" name="cluster14_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment3_input5" name="cluster14_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment3_input6" name="cluster14_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster14_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster14_segment4_input1" name="cluster14_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment4_input2" name="cluster14_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment4_input3" name="cluster14_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment4_input4" name="cluster14_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment4_input5" name="cluster14_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment4_input6" name="cluster14_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment4_input7" name="cluster14_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster14_weekday_segment5.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster14_segment5_input1" name="cluster14_segment5_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment5_input2" name="cluster14_segment5_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment5_input3" name="cluster14_segment5_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment5_input4" name="cluster14_segment5_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment5_input5" name="cluster14_segment5_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment5_input6" name="cluster14_segment5_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster14_segment5_input7" name="cluster14_segment5_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit14" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster15" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 15</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster15_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster15_segment3_input1" name="cluster15_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input2" name="cluster15_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input3" name="cluster15_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input4" name="cluster15_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input5" name="cluster15_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input6" name="cluster15_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input7" name="cluster15_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment3_input8" name="cluster15_segment3_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster15_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster15_segment4_input1" name="cluster15_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment4_input2" name="cluster15_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment4_input3" name="cluster15_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment4_input4" name="cluster15_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment4_input5" name="cluster15_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster15_segment4_input6" name="cluster15_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit15" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="cluster16" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4 class="modal-title">Cluster 16</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+              </div>
+              <div class="modal-body">
+                <form>
+                  <div><img src="static/images/cluster16_weekday_segment3.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster16_segment3_input1" name="cluster16_segment3_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input2" name="cluster16_segment3_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input3" name="cluster16_segment3_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input4" name="cluster16_segment3_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input5" name="cluster16_segment3_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input6" name="cluster16_segment3_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input7" name="cluster16_segment3_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment3_input8" name="cluster16_segment3_input8" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                  <div><img src="static/images/cluster16_weekday_segment4.png" /></div>
+                  <div class="cluster">
+                    <input class="cluster-input" id="cluster16_segment4_input1" name="cluster16_segment4_input1" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment4_input2" name="cluster16_segment4_input2" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment4_input3" name="cluster16_segment4_input3" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment4_input4" name="cluster16_segment4_input4" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment4_input5" name="cluster16_segment4_input5" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment4_input6" name="cluster16_segment4_input6" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                    <input class="cluster-input" id="cluster16_segment4_input7" name="cluster16_segment4_input7" type="number" size="1" step="0.01" min="0.00" max="1.00">
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" id="clusterSubmit16" class="clusterSubmit">Save Values</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+</section> 
+<script>
+$(function() {
+
+    // Create hidden input values and set default
+    $('#cluster-segments input').each(function() {
+      $("<input />").attr("type", "hidden")
+            .attr("name", this.name)
+            .attr("id", this.name)
+            .attr("value", "")
+            .appendTo("#form");   
+    });
+
+    // Override defaul hidden input values w/ user adjusted
+    $('.clusterSubmit').click(function() {
+      $(this).parent().parent().parent().parent().modal('hide'); 
+
+      $(".cluster-input").each(function( index ) {
+        $("#form #" + this.name).val(this.value);
+       });
+    });
+
+
+}); //end function 
+
+</script>
+
+</body>
+</html>
