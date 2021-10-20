@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 import pomegranate
+import time
 
 from speech import DataSetConfigurations
 from speech import SPEECh
@@ -167,6 +168,7 @@ data = DataSetConfigurations('Original16')
 fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
 # Scenario 1
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen1']))
@@ -177,11 +179,13 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-print('Ran 1')
+toc = time.time()
+print('Ran 1 in '+str(np.round(toc-tic,2))+' seconds')
 axes[0,0] = plot_together(config.total_load_segments, axes[0,0], fonts=20, 
                           yax=True, xax=False, set_ymax=8.2, yticks=np.arange(0, 9), nolegend=True)
 
 # Scenario 2
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen1']))
@@ -192,11 +196,13 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', new_wei
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', new_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', new_weights5)
 config.run_all(weekday=weekday_option)
-print('Ran 2')
+toc = time.time()
+print('Ran 2 in '+str(np.round(toc-tic,2))+' seconds')
 axes[0,1] = plot_together(config.total_load_segments, axes[0,1], fonts=20, 
                           yax=False, xax=False, set_ymax=8.2, yticks=np.arange(0, 9), nolegend=False)
 
 # Scenario 3
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen1']))
@@ -209,11 +215,13 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', new_wei
 config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Work', 'weekday', new_weights3_work)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Work', 'weekday', new_weights5_work)
 config.run_all(weekday=weekday_option)
-print('Ran 3')
+toc = time.time()
+print('Ran 3 in '+str(np.round(toc-tic,2))+' seconds')
 axes[1,0] = plot_together(config.total_load_segments, axes[1,0], fonts=20, 
                           yax=True, set_ymax=8.2, yticks=np.arange(0, 9), nolegend=True)
 
 # Scenario 4
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen1']))
@@ -226,7 +234,8 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', new_wei
 config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Work', 'weekday', new_weights3_work)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Work', 'weekday', new_weights5_work)
 config.run_all(weekday=weekday_option)
-print('Ran 4')
+toc = time.time()
+print('Ran 4 in '+str(np.round(toc-tic,2))+' seconds')
 axes[1,1] = plot_together(config.total_load_segments, axes[1,1], fonts=20, 
                           yax=False, set_ymax=8.2, yticks=np.arange(0, 9), nolegend=True)
 
@@ -239,6 +248,7 @@ plt.close()
 fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
 # Scenario 5
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen5']))
@@ -249,10 +259,12 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-print('Ran 5 weekday')
+toc = time.time()
+print('Ran 5 weekday in '+str(np.round(toc-tic,2))+' seconds')
 axes[0,0] = plot_together(config.total_load_segments, axes[0,0], fonts=20, 
                           yax=True, xax=False, set_ymax=9.2, yticks=np.arange(0, 10), nolegend=True)
 
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen5']))
@@ -263,11 +275,13 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday='weekend')
-print('Ran 5 weekend')
+toc = time.time()
+print('Ran 5 weekend in '+str(np.round(toc-tic,2))+' seconds')
 axes[0,1] = plot_together(config.total_load_segments, axes[0,1], fonts=20, 
                           yax=False, xax=False, set_ymax=9.2, yticks=np.arange(0, 10), nolegend=False)
 
 # Scenario 6
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen4']))
@@ -278,11 +292,13 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-print('Ran 6')
+toc = time.time()
+print('Ran 6 in '+str(np.round(toc-tic,2))+' seconds')
 axes[1,0] = plot_together(config.total_load_segments, axes[1,0], fonts=20, 
                           yax=True, set_ymax=9.2, yticks=np.arange(0, 10), nolegend=True)
 
 # Scenario 7
+tic = time.time()
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 new_weights_pg = dict(zip(counts_df['AC Cluster Number'], counts_df['Scen6']))
@@ -293,7 +309,8 @@ config.change_ps_zg(data.cluster_reorder_dendtoac[3], 'Home', 'weekday', base_we
 config.change_ps_zg(data.cluster_reorder_dendtoac[4], 'Home', 'weekday', base_weights4)
 config.change_ps_zg(data.cluster_reorder_dendtoac[5], 'Home', 'weekday', base_weights5)
 config.run_all(weekday=weekday_option)
-print('Ran 7')
+toc = time.time()
+print('Ran 7 in '+str(np.round(toc-tic,2))+' seconds')
 axes[1,1] = plot_together(config.total_load_segments, axes[1,1], fonts=20, 
                           yax=False, set_ymax=9.2, yticks=np.arange(0, 10), nolegend=True)
 
