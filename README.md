@@ -8,6 +8,8 @@ Email: siobhan (dot) powell (at) stanford (dot) edu
 Publications: 
 S. Powell, G. V. Cezar, R. Rajagopal, "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior", submitted.
 
+If you use the project or this code, please cite us: [citation example]. 
+
 Read more about the project here: https://energy.stanford.edu/bitsandwatts/research/ev50-flagship-project/long-range-planning-ev50-what-future-demand-charging. 
 
 Project Advisors: Ram Rajagopal, Ines Azevedo, Gustavo Cezar, Liang Min. 
@@ -96,6 +98,10 @@ plots.pg()
 plots.sessions_components(g=1, cat='Work', weekday='weekday')
 plots.groups(save_string='simple_example_groups.png')
 ```
+
+### For the Paper "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior"
+The file `RunPaperScenarios.py` was used to run the scenarios presented in the paper. The code used to run other calculations, train the model, and run the validation results presented in the paper is shown in the folder `ProcessingForPaper`.
+
 
 ### Running with Custom Data
 Code included in the directory `FitNewModel` will let you fit your own version of the model to your own data. The process for doing this is divided into several steps: 
