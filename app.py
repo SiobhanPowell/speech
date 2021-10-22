@@ -1,3 +1,10 @@
+"""
+SPEECh: Scalable Probabilistic Estimates of EV Charging
+Code first published in October 2021.
+Developed by Lesley Ryan and Siobhan Powell.
+
+This file is used to run the back-end of the interactive tool and website.
+"""
 from flask import Flask, render_template, request, jsonify
 import json
 import numpy as np

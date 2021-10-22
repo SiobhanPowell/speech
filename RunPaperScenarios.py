@@ -1,3 +1,12 @@
+"""
+SPEECh: Scalable Probabilistic Estimates of EV Charging
+Code first published in October 2021.
+Developed by Siobhan Powell (siobhan.powell@stanford.edu).
+
+This script runs the scenarios and generates the plots shown in the Results Section of the paper
+`Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior'.
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
