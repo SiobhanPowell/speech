@@ -1,6 +1,9 @@
 # SPEECh
 ## Scalable Probabilistic Estimates of Electric Vehicle Charging
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5593509.svg)](https://doi.org/10.5281/zenodo.5593509)
+
+
 Primary Contact: Siobhan Powell. Email: siobhan (dot) powell (at) stanford (dot) edu
 
 Publication: 
@@ -8,6 +11,8 @@ Publication:
 S. Powell, G. V. Cezar, R. Rajagopal, "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior", submitted.
 
 Citations for code and data:
+
+Siobhan Powell, Gustavo Vianna Cezar, & Ram Rajagopal. (2021). SiobhanPowell/speech: First release (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.5593509
 
 Powell, Siobhan; Cezar, Gustavo Vianna; Rajagopal, Ram (2021), “SPEECh Original Model”, Mendeley Data, V1, doi: 10.17632/gvk34mybtb.1
 
