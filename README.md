@@ -36,7 +36,7 @@ This repository contains:
 This README contains a short tutorial and useful instructions on all of the above elements. 
 
 ## Data
-Two data sets have been posted in association with this repository: [link]
+Two data sets have been posted in association with this repository: https://data.mendeley.com/datasets/gvk34mybtb/1
 1. The original model files are in the folder `Model Data`. You must download these and save them in the following folder structure to be able to run the model: `Data` > `Original16` > [files]. All GMM files (ending in `.p`) should be kept in a further subfolder: `Data` > `Original16` > `GMMs` > [files]. 
 2. The profiles used in Figure 4 are in the folder `Normalized Load Profiles`. They represent a typical weekday or weekend aggregate profile for each of the 16 driver groups. They are in units kW/driver: calculated by simulating the demand for 10000 drivers in each group and then normalizing the result by dividing by 10000. They are not scaled according to group weights. By weighting and combining these profiles you can approximate model results; this offers a simpler way to generate your own scenarios without running the original code.
 
