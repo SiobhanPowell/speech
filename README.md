@@ -1,16 +1,24 @@
 # SPEECh
 ## Scalable Probabilistic Estimates of Electric Vehicle Charging
 
-Primary Contact: Siobhan Powell.
+Primary Contact: Siobhan Powell. Email: siobhan (dot) powell (at) stanford (dot) edu
 
-Email: siobhan (dot) powell (at) stanford (dot) edu
+Publication: 
 
-Publications: 
 S. Powell, G. V. Cezar, R. Rajagopal, "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior", submitted.
 
-If you use the project or this code, please cite us: [citation example]. 
+Citations for code and data:
 
-Read more about the project here: https://energy.stanford.edu/bitsandwatts/research/ev50-flagship-project/long-range-planning-ev50-what-future-demand-charging. 
+Powell, Siobhan; Cezar, Gustavo Vianna; Rajagopal, Ram (2021), “SPEECh Original Model”, Mendeley Data, V1, doi: 10.17632/gvk34mybtb.1
+
+## About 
+
+Electric vehicles (EV) and EV charging stations are expected to multiply over the next decade. 
+Long-term planning for grid and charging network design depend on detailed forecasts of future charging demand. 
+SPEECh, Scalable Probabilistic Estimates of Electric Vehicle Charging, is a novel, probabilistic framework for 
+simulating very large-scale estimates of EV charging load that are grounded in real charging data and drivers' charging patterns. 
+You can learn more about SPEECh by reading the paper (listed above). 
+For more details about the larger project: https://energy.stanford.edu/bitsandwatts/research/ev50-flagship-project/long-range-planning-ev50-what-future-demand-charging. This project builds on earlier work in the SCRIPT project: https://github.com/slacgismo/SCRIPT-tool. 
 
 Project Advisors: Ram Rajagopal, Ines Azevedo, Gustavo Cezar, Liang Min. 
 
@@ -18,12 +26,26 @@ Collaborators and Team: Charles Kolstad, Lesley Ryan, Noel Crisostomo, Matt Alex
 
 Thank you to the many collaborators who have made this project possible.
 
+This repository contains: 
+- The model,
+- Examples demonstrating how to use the model and adjust assumptions to run new scenarios yourself,
+- Code to run an interactive application where you can do this ^ through an interface,
+- Code to help you apply the model to your own data set, and 
+- The code used for the paper.
+
+This README contains a short tutorial and useful instructions on all of the above elements. 
+
+## Data
+Two data sets have been posted in association with this repository: [link]
+1. The original model files are in the folder `Model Data`. You must download these and save them in the following folder structure to be able to run the model: `Data` > `Original16` > [files]. All GMM files (ending in `.p`) should be kept in a further subfolder: `Data` > `Original16` > `GMMs` > [files]. 
+2. The profiles used in Figure 4 are in the folder `Normalized Load Profiles`. They represent a typical weekday or weekend aggregate profile for each of the 16 driver groups. They are in units kW/driver: calculated by simulating the demand for 10000 drivers in each group and then normalizing the result by dividing by 10000. They are not scaled according to group weights. By weighting and combining these profiles you can approximate model results; this offers a simpler way to generate your own scenarios without running the original code.
+
 ## Interactive Application
 
 To run the interactive application locally:
 0. Make sure you have a working version of Python 3 (this code was tested with Python 3.7.4).
 1. Navigate to this folder in your terminal.
-2. Download the data folder from: https://s3.us-west-1.amazonaws.com/speech.data/Original16.zip. Store it in a subfolder called `Data`.
+2. Download the data folder and save it as described in step 1 of `Data` above.
 3. In a new virtual environment, run `pip install -r requirements.txt`. You can also run with the packages in your main system, but the `requirements.txt` file lists versions which we know will work with together in this code. 
 4. Run `flask run`.
 5. Go to `localhost:5000` in your browser.
@@ -125,3 +147,6 @@ This works with:
     json == 2.0.9
 ```    
 Python 3.7.4.
+
+## Funding Acknowledgements
+This work was funded by the Bits & Watts Initiative, by the California Energy Commission under grant EPC-16-057, and by the National Science Foundation through a CAREER award (\#1554178). 

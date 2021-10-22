@@ -1,4 +1,11 @@
-"""Demonstrate built-in plotting options. Make sure to close each figure after it opens to continue the script."""
+"""
+SPEECh: Scalable Probabilistic Estimates of EV Charging
+Code first published in October 2021.
+Developed by Siobhan Powell (siobhan.powell@stanford.edu).
+
+This script demonstrates running the model, simple changes to behavioural component weights, and the use of built-in plotting options.
+Make sure to close each figure after it opens to continue the script.
+"""
 
 from speech import DataSetConfigurations
 from speech import SPEECh
@@ -13,11 +20,11 @@ weekday_option = 'weekday'
 data = DataSetConfigurations('Original16', ng=16)
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
-plots = Plotting(model, n=total_evs)  # plots total_evs (1000) in each group (i.e. ignores P(G))
+plots = Plotting(model, n=total_evs)  # plots total_evs
 plots.total(weekday='weekday', save_str='simple_example_plot.png')
 plots.pg()
 plots.sessions_components(g=1, cat='Work', weekday='weekday')
-plots.groups(save_string='simple_example_groups.png')
+plots.groups(save_string='simple_example_groups.png', n=total_evs) # plots total_evs in each group
 
 # Demonstration of changing group weights and behaviour weights:
 model = SPEECh(data)

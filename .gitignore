@@ -2,6 +2,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,pycharm,windows,linux,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks,pycharm,windows,linux,macos
 
+*.pdf
+*.png
+*.npy
+
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks
 # website: http://jupyter.org/

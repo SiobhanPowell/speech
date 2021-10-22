@@ -1,3 +1,9 @@
+"""
+SPEECh: Scalable Probabilistic Estimates of EV Charging
+Code first published in October 2021.
+Developed by Siobhan Powell (siobhan.powell@stanford.edu).
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -87,7 +93,7 @@ class DataSetConfigurations(object):
         self.labels = ['Residential L2', 'MUD L2', 'Workplace L2', 'Public L2', 'Public DCFC']
         self.colours = {'Residential L2': '#dfc27d', 'MUD L2': '#f6e8c3', 'Workplace L2': '#80cdc1', 'Public L2': '#01665e', 'Public DCFC': '#003c30'}
         self.num_categories = 5
-        self.rates = [6.6, 6.6, 6.6, 6.6, 50]
+        self.rates = [6.6, 6.6, 6.6, 6.6, 150]
         self.gmm_names = {'Home': 'home', 'Work': 'work', 'Other Slow': 'other_slow', 'MUD': 'mud', 'Other Fast': 'other_fast'}
         self.start_time_scaler = 1/60
         self.zkey_weekday = ' - Fraction of weekdays with session'
@@ -105,7 +111,7 @@ class DataSetConfigurations(object):
         self.labels = ['Residential L2', 'MUD L2', 'Workplace L2', 'Public L2', 'Public DCFC']
         self.colours = {'Residential L2': '#dfc27d', 'MUD L2': '#f6e8c3', 'Workplace L2': '#80cdc1', 'Public L2': '#01665e', 'Public DCFC': '#003c30'}
         self.num_categories = 5
-        self.rates = [6.6, 6.6, 6.6, 6.6, 50]
+        self.rates = [6.6, 6.6, 6.6, 6.6, 150]
         self.gmm_names = {'Home': 'home', 'Work': 'work', 'Other Slow': 'other_slow', 'MUD': 'mud', 'Other Fast': 'other_fast'}
         self.start_time_scaler = 1/60
         self.zkey_weekday = ' - Fraction of weekdays with session'
@@ -709,7 +715,7 @@ class Plotting(object):
 
 
 class Scenarios(object):
-    """The scenarios for P(G) based on those in the publication."""
+    """The scenarios for P(G) based on those in the publication. For use by the user interface tool."""
 
     def __init__(self, scenario_name):
 
