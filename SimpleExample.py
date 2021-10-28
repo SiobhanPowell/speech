@@ -11,6 +11,7 @@ from speech import DataSetConfigurations
 from speech import SPEECh
 from speech import SPEEChGeneralConfiguration
 from speech import Plotting
+from speech import Scenarios
 
 
 total_evs = 1000
@@ -31,6 +32,11 @@ model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 config.change_pg(new_weights={0: 0.5, 1: 0.5})  # Adjust distribution over driver groups so that 0 and 1 have each 50%
 # (^ down-weights the others to 0 accordingly)
+
+# Could also uncomment these two lines to use a pre-set weighting: 
+# scenario = Scenarios('BaseCase')
+# config.change_pg(new_weights = scenario.new_weights)
+
 config.num_evs(total_evs)  # Input number of EVs in simulation
 config.groups()
 # Give weights 40% and 60% to behaviors 0 and 1 in the group 1 workplace segment:

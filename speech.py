@@ -389,7 +389,7 @@ class LoadProfile(object):
         self.load_segments_dict = {}
         self.load_segments_array = np.zeros((self.config.num_time_steps, self.config.speech.data.num_categories))
 
-    def calculate_load(self):
+    def calculate_load(self, return_individual_session_parameters=False):
         """For each segment, calculate the total load profile.
         For each segment, the process is as follows:
             Step 1: generate sessions parameters using the segment GMM, stored in full_output
@@ -397,6 +397,9 @@ class LoadProfile(object):
             Step 3: calculate sessions load profiles, calling end_times_and_load
             Step 4: store the result
         """
+        
+        if return_individual_session_parameters:
+            individual_session_parameters = {}
 
         for segment_number in range(self.config.speech.data.num_categories):
             cat = self.config.speech.data.categories[segment_number]
@@ -412,10 +415,17 @@ class LoadProfile(object):
                     start_times = (self.config.speech.data.start_time_scaler * np.mod(output[:, 0], 24*3600)).astype(int)
                 energies = np.clip(np.abs(output[:, 1]), 0, self.config.energy_clip)
                 end_times, load = self.end_times_and_load(start_times, energies, self.config.speech.data.rates[segment_number])
+                
+                if return_individual_session_parameters:
+                    individual_session_parameters[cat] = pd.DataFrame({'Start':start_times, 'Energy':np.round(energies,2), 'Duration': (self.config.speech.data.start_time_scaler * np.clip(np.abs(output[:, 2]), 0, 24*3600*7)).astype(int), 'Rate': self.config.speech.data.rates[segment_number] * np.ones(np.shape(start_times))})
+
             else:
                 load = np.zeros((self.config.num_time_steps, ))
             self.load_segments_dict[self.config.speech.data.labels[segment_number]] = load
             self.load_segments_array[:, segment_number] = load
+                
+        if return_individual_session_parameters:
+            return individual_session_parameters
 
     def end_times_and_load(self, start_times, energies, rate):
         """Calculate the load profile given data on individual sessions.
