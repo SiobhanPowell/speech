@@ -47,6 +47,8 @@ Two data sets have been posted in association with this repository. They are ava
 
 ## Interactive Application
 
+To play with the interactive application online, go to: ev50-speech.stanford.edu.
+
 To run the interactive application locally:
 0. Make sure you have a working version of Python 3 (this code was tested with Python 3.7.4).
 1. Navigate to this folder in your terminal.
