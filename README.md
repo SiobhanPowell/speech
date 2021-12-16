@@ -8,7 +8,7 @@ Primary Contact: Siobhan Powell. Email: siobhan (dot) powell (at) stanford (dot)
 
 Publication: 
 
-S. Powell, G. V. Cezar, R. Rajagopal, "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior", submitted.
+S. Powell, G. V. Cezar, R. Rajagopal, "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior", Applied Energy. Accepted.
 
 Citations for code and data:
 
