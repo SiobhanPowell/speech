@@ -263,7 +263,7 @@ class SPEEChGeneralConfiguration(object):
 
             self.group_configs[g].segment_gmms[weekday][cat] = gmm
 
-    def change_pg(self, new_weights, new_col='pg'):
+    def change_pg(self, new_weights, new_col='pg', dend=False):
         """Change the distribution over driver groups, P(g).
 
         Parameters:
@@ -273,6 +273,12 @@ class SPEEChGeneralConfiguration(object):
         The input need only specify new weights for a subset of the components;
         the remaining weight will be distributed among the remaining components proportionately.
         """
+        
+        if dend: # If inputs are given using cluster numbers from the dendrogram
+            new_weights_old = copy.deepcopy(new_weights)
+            new_weights = {}
+            for key, val in new_weights_old.items():
+                new_weights[self.speech.data.cluster_reorder_dendtoac[key]] = val
 
         self.speech.pg[new_col] = self.speech.pg['pg'].copy()
         all_inds = np.arange(0, self.speech.data.ng)

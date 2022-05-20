@@ -62,7 +62,7 @@ This web application was developed by Lesley Ryan with help from Siobhan Powell.
 
 
 ## Code
-The main code is presented in `speech.py` and the file `SimpleExample.py` presents a simple example of how to use it. 
+The main code is presented in `speech.py` and the file `SimpleExample.py` presents a simple example of how to use it. `HowToExtractIndividualSessions.py` gives sample code for accessing the individual simulated sessions behind an aggregate scenario.
 
 The more complex scenarios used in `RunPaperScenarios.py` generate the scenarios included in the publication, "Scalable Probabilistic Estimates of Electric Vehicle Charging Given Observed Driver Behavior". 
 
@@ -98,9 +98,10 @@ model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 ```
 
-At this stage you have the option to adjust the distribution over driver groups, P(G). As an example, this would adjust the weight of clusters 0 and 1 to cover 50% of drivers each. I.e. P(G=0)=0.5, P(G=1)=0.5. This step is optional.
+At this stage you have the option to adjust the distribution over driver groups, P(G). As an example, this would adjust the weight of clusters 0 and 4 to cover 50% of drivers each. I.e. P(G=0)=0.5, P(G=4)=0.5. This step is optional. The flag dend=True should be used when you make your own weights to ensure the group numbers line up with the paper. Also note the group numbering starts at 0 instead of 1 in the code. 
+
 ```
-config.change_pg(new_weights={0: 0.5, 1: 0.5})
+config.change_pg(new_weights={0: 0.5, 4: 0.5}, dend=True)
 ```
 
 Next, tell the configuration class how many drivers to simulate, and call `groups()` to load the group configurations. 
@@ -109,9 +110,9 @@ config.num_evs(total_evs)
 config.groups()
 ```
 
-At this stage you have the option to adjust the distribution over charging session behaviours, P(s|z, G). As an example, this would adjust the distribution for driver group 1 workplace weekday charging, giving 40% weight to the first behaviour component in the mixture model and 60% to the second. This step is optional.
+At this stage you have the option to adjust the distribution over charging session behaviours, P(s|z, G). As an example, this would adjust the distribution for driver group 0 workplace weekday charging, giving 40% weight to the first behaviour component in the mixture model and 60% to the second. This step is optional.
 ```
-config.change_ps_zg(1, 'Work', 'weekday', {0: 0.4, 1: 0.6})
+config.change_ps_zg(0, 'Work', 'weekday', {0: 0.4, 1: 0.6})
 ```
 
 Finally, calculate the load profile and plot:
