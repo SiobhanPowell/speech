@@ -98,6 +98,11 @@ model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
 ```
 
+If you want to remove the use of residential timers and focus on uncontrolled charging behaviour, you could instead call:
+```
+config = SPEEChGeneralConfiguration(model, remove_timers=True)
+```
+
 At this stage you have the option to adjust the distribution over driver groups, P(G). As an example, this would adjust the weight of clusters 0 and 4 to cover 50% of drivers each. I.e. P(G=0)=0.5, P(G=4)=0.5. This step is optional. The flag dend=True should be used when you make your own weights to ensure the group numbers line up with the paper. Also note the group numbering starts at 0 instead of 1 in the code. 
 
 ```
