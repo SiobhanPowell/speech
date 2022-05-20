@@ -30,7 +30,8 @@ plots.groups(save_string='simple_example_groups.png', n=total_evs) # plots total
 # Demonstration of changing group weights and behaviour weights:
 model = SPEECh(data)
 config = SPEEChGeneralConfiguration(model)
-config.change_pg(new_weights={0: 0.5, 1: 0.5})  # Adjust distribution over driver groups so that 0 and 1 have each 50%
+config.change_pg(new_weights={3: 0.5, 4: 0.5}, dend=True)  # Adjust distribution over driver groups so that 0 and 1 have each 50%
+# Note counting of groups starts at 0 and ends at 15 (subtract 1 from the numbering in the paper)
 # (^ down-weights the others to 0 accordingly)
 
 # Could also uncomment these two lines to use a pre-set weighting: 
@@ -41,7 +42,7 @@ config.num_evs(total_evs)  # Input number of EVs in simulation
 config.groups()
 # Give weights 40% and 60% to behaviors 0 and 1 in the group 1 workplace segment:
 # (down-weights the others to 0 accordingly)
-config.change_ps_zg(1, 'Work', 'weekday', {0: 0.4, 1: 0.6})
+config.change_ps_zg(3, 'Work', 'weekday', {0: 0.4, 1: 0.6})
 config.run_all(weekday=weekday_option)
 plots = Plotting(model, config)
 plots.total(save_str='simple_example_plot_adjusted.png')
