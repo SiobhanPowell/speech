@@ -154,12 +154,12 @@ This works with:
 ```
     pandas == 0.25.1
     matplotlib == 3.1.1
-    numpy == 1.18.1
+    numpy == 1.21.6
     sklearn == 0.22.2.post1
     flask == 1.1.1
     json == 2.0.9
 ```    
-Python 3.7.4.
+Python 3.7.4. Note, the paper was run with ``` numpy == 1.18.1 ```, but since security issues have now been identified with numpy <= 1.18.5 we are updating the requirements here. 
 
 ## Funding Acknowledgements
 This work was funded by the Bits & Watts Initiative, by the California Energy Commission under grant EPC-16-057, and by the National Science Foundation through a CAREER award (\#1554178). 
